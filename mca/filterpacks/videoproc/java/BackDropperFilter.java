@@ -173,7 +173,10 @@ public class BackDropperFilter extends Filter {
     // Default rate at which to verify whether background is stable
     private static final float DEFAULT_MASK_VERIFY_RATE = 0.25f;
     // Default rate at which to verify whether background is stable
-    private static final int   DEFAULT_LEARNING_DONE_THRESHOLD = 20;
+    /* Updated the Learning threshold to 20 from 200 as a workaround to
+     * fix the Live effects issue.
+     */
+    private static final int   DEFAULT_LEARNING_DONE_THRESHOLD = 200;
 
     // Default 3x3 matrix, column major, for fitting background 1:1
     private static final float[] DEFAULT_BG_FIT_TRANSFORM = new float[] {
