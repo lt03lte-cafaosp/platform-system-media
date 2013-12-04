@@ -464,9 +464,12 @@ static int alloc_mixer_state(struct audio_route *ar)
         /* Skip unsupported types that are not supported yet in XML */
         type = mixer_ctl_get_type(ctl);
         if ((type != MIXER_CTL_TYPE_BOOL) && (type != MIXER_CTL_TYPE_INT) &&
-            (type != MIXER_CTL_TYPE_ENUM))
+            (type != MIXER_CTL_TYPE_ENUM)) {
+            ar->mixer_state[i].old_value = NULL;
+            ar->mixer_state[i].new_value = NULL;
+            ar->mixer_state[i].reset_value = NULL;
             continue;
-
+        }
         ar->mixer_state[i].old_value = malloc(num_values * sizeof(int));
         ar->mixer_state[i].new_value = malloc(num_values * sizeof(int));
         ar->mixer_state[i].reset_value = malloc(num_values * sizeof(int));
