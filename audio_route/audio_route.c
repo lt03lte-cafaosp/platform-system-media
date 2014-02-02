@@ -543,8 +543,19 @@ int audio_route_update_mixer(struct audio_route *ar)
 static void save_mixer_state(struct audio_route *ar)
 {
     unsigned int i;
+    enum mixer_ctl_type type;
+    struct mixer_ctl *ctl;
 
     for (i = 0; i < ar->num_mixer_ctls; i++) {
+        ctl = ar->mixer_state[i].ctl;
+        type = mixer_ctl_get_type(ctl);
+
+        if ((type != MIXER_CTL_TYPE_BOOL) && (type != MIXER_CTL_TYPE_INT) &&
+            (type != MIXER_CTL_TYPE_ENUM)) {
+            ALOGV("%s skip unsupported ctl %s", __func__, mixer_ctl_get_name(ctl));
+            continue;
+        }
+
         memcpy(ar->mixer_state[i].reset_value, ar->mixer_state[i].new_value,
                ar->mixer_state[i].num_values * sizeof(int));
     }
@@ -554,9 +565,20 @@ static void save_mixer_state(struct audio_route *ar)
 void audio_route_reset(struct audio_route *ar)
 {
     unsigned int i;
+    enum mixer_ctl_type type;
+    struct mixer_ctl *ctl;
 
     /* load all of the saved values */
     for (i = 0; i < ar->num_mixer_ctls; i++) {
+        ctl = ar->mixer_state[i].ctl;
+        type = mixer_ctl_get_type(ctl);
+
+        if ((type != MIXER_CTL_TYPE_BOOL) && (type != MIXER_CTL_TYPE_INT) &&
+            (type != MIXER_CTL_TYPE_ENUM)) {
+            ALOGV("%s skip unsupported ctl %s", __func__, mixer_ctl_get_name(ctl));
+            continue;
+        }
+
         memcpy(ar->mixer_state[i].new_value, ar->mixer_state[i].reset_value,
                ar->mixer_state[i].num_values * sizeof(int));
     }
