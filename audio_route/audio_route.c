@@ -290,6 +290,9 @@ static int path_add_path(struct audio_route *ar, struct mixer_path *path,
 {
     unsigned int i;
 
+    if (!path || !sub_path)
+        return -1;
+
     for (i = 0; i < sub_path->length; i++)
         if (path_add_setting(ar, path, &sub_path->setting[i]) < 0)
             return -1;
@@ -400,6 +403,11 @@ static void start_tag(void *data, const XML_Char *tag_name,
     }
 
     else if (strcmp(tag_name, "ctl") == 0) {
+        if (attr_name == NULL) {
+            ALOGE("Unnamed attr_name!");
+            goto done;
+        }
+
         /* Obtain the mixer ctl and value */
         ctl = mixer_get_ctl_by_name(ar->mixer, attr_name);
         if (ctl == NULL) {
@@ -410,9 +418,17 @@ static void start_tag(void *data, const XML_Char *tag_name,
         switch (mixer_ctl_get_type(ctl)) {
         case MIXER_CTL_TYPE_BOOL:
         case MIXER_CTL_TYPE_INT:
+            if (attr_value == NULL) {
+                ALOGE("Control %s has NULL attr value - skipping");
+                goto done;
+            }
             value = atoi((char *)attr_value);
             break;
         case MIXER_CTL_TYPE_ENUM:
+            if (attr_value == NULL) {
+                ALOGE("Control %s has NULL attr value - skipping");
+                goto done;
+            }
             value = mixer_enum_string_to_value(ctl, (char *)attr_value);
             break;
         default:
