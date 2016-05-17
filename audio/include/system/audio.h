@@ -277,6 +277,10 @@ typedef enum {
     AUDIO_FORMAT_ALAC                = 0x1C000000UL,
     AUDIO_FORMAT_APE                 = 0x1D000000UL,
     AUDIO_FORMAT_AAC_ADTS            = 0x1E000000UL,
+    AUDIO_FORMAT_SBC                 = 0x1F000000UL,
+    AUDIO_FORMAT_APTX                = 0x20000000UL,
+    AUDIO_FORMAT_APTX_HD             = 0x21000000UL,
+
     AUDIO_FORMAT_MAIN_MASK           = 0xFF000000UL,
     AUDIO_FORMAT_SUB_MASK            = 0x00FFFFFFUL,
 
@@ -558,6 +562,7 @@ enum {
     AUDIO_CHANNEL_INDEX_MASK_8 =  AUDIO_CHANNEL_INDEX_HDR | (1 << 8) - 1,
     // FIXME FCC_8
 };
+
 
 /* The return value is undefined if the channel mask is invalid. */
 static inline uint32_t audio_channel_mask_get_bits(audio_channel_mask_t channel)
@@ -850,6 +855,41 @@ typedef struct {
     uint32_t offload_buffer_size;       // offload fragment size
     audio_usage_t usage;
 } audio_offload_info_t;
+
+
+typedef struct {
+    uint32_t subband;    /* 4, 8 */
+    uint32_t blk_len;    /* 4, 8, 12, 16 */
+    uint16_t sampling_rate; /*44.1khz,48khz*/
+    uint8_t  channels;      /*0(Mono),1(Dual_mono),2(Stereo),3(JS)*/
+    uint8_t  alloc;         /*0(Loudness),1(SNR)*/
+    uint8_t  min_bitpool;   /* 2 */
+    uint8_t  max_bitpool;   /*53(44.1khz),51 (48khz) */
+    uint16_t mtu;
+    uint32_t bitrate;      /* 320kbps to 512kbps */
+} audio_sbc_encoder_config;
+
+
+typedef struct {
+    uint8_t  codec_type;
+    uint8_t  dev_idx;
+    uint32_t vendor_id;
+    uint16_t codec_id;
+    uint16_t sampling_rate;
+    uint8_t  chnl;
+    uint8_t  cp;
+    uint16_t mtu;
+    uint32_t bitrate;
+} audio_aptx_encoder_config;
+
+
+typedef struct {
+    uint32_t bit_rate;
+    uint32_t enc_mode; /* LC, SBR, PS */
+    uint16_t format_flag; /* RAW, ADTS */
+    uint16_t channels; /* 1-Mono, 2-Stereo */
+    uint32_t sampling_rate;
+} audio_aac_encoder_config;
 
 #define AUDIO_MAKE_OFFLOAD_INFO_VERSION(maj,min) \
             ((((maj) & 0xff) << 8) | ((min) & 0xff))
