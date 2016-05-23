@@ -1,11 +1,22 @@
+#                                               -*- Autoconf -*-
+# configure.ac -- Autoconf script
+#
+
+# Process this file with autoconf to produce a configure script
+
+# Requires autoconf tool later than 2.61
 AC_PREREQ(2.61)
+# Initialize the system-media package version 1.0.0
 AC_INIT([system-media], 1.0.0)
-AM_INIT_AUTOMAKE([-Wall gnu foreign])
+# Does not strictly follow GNU Coding standards
+AM_INIT_AUTOMAKE([foreign])
+# Verifies the --srcdir is correct by checking for the path
 AC_CONFIG_SRCDIR([Makefile.am])
+# defines some macros variable to be included by source
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
-# Check for programs
+# Checks for programs.
 LT_INIT
 AC_PROG_LIBTOOL
 AC_PROG_CXX
@@ -35,6 +46,7 @@ AC_ARG_WITH([glib],
 
 if (test "x${with_glib}" = "xyes"); then
         AC_DEFINE(ENABLE_USEGLIB, 1, [Define if HLOS systems uses glib])
+
         PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.16, dummy=yes,
                                 AC_MSG_ERROR(GThread >= 2.16 is required))
         PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.16, dummy=yes,
@@ -52,7 +64,12 @@ AC_SUBST([CPPFLAGS])
 AC_SUBST([LIBS])
 
 AC_CONFIG_FILES([ \
-        Makefile  \
-        camera/src/Makefile
+        Makefile \
+        camera/src/Makefile \
+        audio_route/Makefile \
+        audio_utils/Makefile \
+        audio/include/Makefile \
+        audio_utils/tinysndfile.pc \
+        audio_route/audio_route.pc
         ])
 AC_OUTPUT

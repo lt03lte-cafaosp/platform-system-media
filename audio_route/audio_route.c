@@ -95,7 +95,7 @@ static inline struct mixer_ctl *index_to_ctl(struct audio_route *ar,
     return ar->mixer_state[ctl_index].ctl;
 }
 
-static void path_print(struct audio_route *ar, struct mixer_path *path)
+static void __attribute__((unused)) path_print(struct audio_route *ar, struct mixer_path *path)
 {
     unsigned int i;
     unsigned int j;
@@ -322,7 +322,6 @@ static int path_apply(struct audio_route *ar, struct mixer_path *path)
 static int path_reset(struct audio_route *ar, struct mixer_path *path)
 {
     unsigned int i;
-    unsigned int j;
     unsigned int ctl_index;
     struct mixer_ctl *ctl;
     enum mixer_ctl_type type;
@@ -473,7 +472,6 @@ static void end_tag(void *data, const XML_Char *tag_name)
 static int alloc_mixer_state(struct audio_route *ar)
 {
     unsigned int i;
-    unsigned int j;
     unsigned int num_values;
     struct mixer_ctl *ctl;
     enum mixer_ctl_type type;
@@ -725,7 +723,6 @@ struct audio_route *audio_route_init(unsigned int card, const char *xml_path)
     FILE *file;
     int bytes_read;
     void *buf;
-    int i;
     struct audio_route *ar;
 
     ar = calloc(1, sizeof(struct audio_route));
@@ -797,6 +794,7 @@ struct audio_route *audio_route_init(unsigned int card, const char *xml_path)
     return ar;
 
 err_parse:
+    path_free(ar);
     XML_ParserFree(parser);
 err_parser_create:
     fclose(file);

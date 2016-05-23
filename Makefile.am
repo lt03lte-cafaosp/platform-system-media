@@ -1,5 +1,8 @@
 BUILD_COMPONENTS :=
 
 BUILD_COMPONENTS += camera/src
+BUILD_COMPONENTS += audio_route
+BUILD_COMPONENTS += audio_utils
+BUILD_COMPONENTS += audio/include
 
 SUBDIRS := $(BUILD_COMPONENTS)
