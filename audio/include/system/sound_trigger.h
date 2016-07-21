@@ -157,6 +157,8 @@ struct sound_trigger_recognition_event {
     audio_config_t                   audio_config;        /* audio format of either the trigger in
                                                              event data or to use for capture of the
                                                              rest of the utterance */
+    uint64_t                         timestamp;       /* time stamp at the time of detection */
+
     unsigned int                     data_size;         /* size of opaque event data */
     unsigned int                     data_offset;       /* offset of opaque data start from start of
                                                           this struct (e.g sizeof struct
