@@ -830,6 +830,7 @@ typedef enum {
     AUDIO_INPUT_FLAG_HW_HOTWORD = 0x2,  // prefer an input that captures from hw hotword source
     AUDIO_INPUT_FLAG_RAW        = 0x4,  // minimize signal processing
     AUDIO_INPUT_FLAG_SYNC       = 0x8,  // synchronize I/O streams
+    AUDIO_INPUT_FLAG_TIMESTAMP  = 0x10, // timestamp metadata mode
 
 } audio_input_flags_t;
 
