@@ -638,6 +638,7 @@ sf_count_t sf_writef_int(SNDFILE *handle, const int *ptr, sf_count_t desiredFram
     size_t actualBytes = 0;
     switch (handle->info.format & SF_FORMAT_SUBMASK) {
     case SF_FORMAT_PCM_32:
+    case SF_FORMAT_PCM_24:
         actualBytes = fwrite(ptr, sizeof(char), desiredBytes, handle->stream);
         break;
     default:    // transcoding from other formats not yet implemented
