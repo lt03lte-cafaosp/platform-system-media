@@ -36,6 +36,7 @@ typedef enum {
 #define RECOGNITION_MODE_USER_IDENTIFICATION 0x2 /* trigger only if one user in model identified */
 #define RECOGNITION_MODE_USER_AUTHENTICATION 0x4 /* trigger only if one user in mode
                                                     authenticated */
+#define RECOGNITION_MODE_GENERIC_TRIGGER 0x8
 #define RECOGNITION_STATUS_SUCCESS 0
 #define RECOGNITION_STATUS_ABORT 1
 #define RECOGNITION_STATUS_FAILURE 2
@@ -44,7 +45,8 @@ typedef enum {
 
 typedef enum {
     SOUND_MODEL_TYPE_UNKNOWN = -1,    /* use for unspecified sound model type */
-    SOUND_MODEL_TYPE_KEYPHRASE = 0    /* use for key phrase sound models */
+    SOUND_MODEL_TYPE_KEYPHRASE = 0,    /* use for key phrase sound models */
+    SOUND_MODEL_TYPE_GENERIC = 1       /* use for all models other than keyphrase */
 } sound_trigger_sound_model_type_t;
 
 typedef struct sound_trigger_uuid_s {
@@ -192,6 +194,9 @@ struct sound_trigger_phrase_recognition_event {
     struct sound_trigger_phrase_recognition_extra phrase_extras[SOUND_TRIGGER_MAX_PHRASES];
 };
 
+struct sound_trigger_generic_recognition_event {
+    struct sound_trigger_recognition_event common;
+};
 /*
  * configuration for sound trigger capture session passed to start_recognition()
  */

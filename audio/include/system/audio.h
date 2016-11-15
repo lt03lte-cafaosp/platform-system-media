@@ -280,6 +280,8 @@ typedef enum {
     AUDIO_FORMAT_ALAC                = 0x1C000000UL,
     AUDIO_FORMAT_APE                 = 0x1D000000UL,
     AUDIO_FORMAT_AAC_ADTS            = 0x1E000000UL,
+    AUDIO_FORMAT_DSD                 = 0x1F000000UL,
+    AUDIO_FORMAT_SBC                 = 0x20000000UL,
     AUDIO_FORMAT_MAIN_MASK           = 0xFF000000UL,
     AUDIO_FORMAT_SUB_MASK            = 0x00FFFFFFUL,
 
