@@ -1,18 +1,41 @@
+#compile audio utils
 AM_CFLAGS = -Werror -Wall
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = tinysndfile.pc
+pkgconfig_DATA = audio_utils.pc
+EXTRA_DIST = $(pkgconfig_DATA)
+
+AM_CFLAGS += -I $(WORKSPACE)/system/media/audio/include
+AM_CFLAGS += -I $(WORKSPACE)/system/media/audio_utils/include
+
+libraryaudioutils_includedir = $(includedir)/audio/audio_utils
+libraryaudioutils_include_HEADERS = include/audio_utils/primitives.h
+libraryaudioutils_include_HEADERS += include/audio_utils/format.h
+
+audioutils_sources = format.c \
+            channels.c \
+            primitives.c
+
+lib_LTLIBRARIES = libaudioutils.la
+libaudioutils_la_SOURCES = $(audioutils_sources)
+libaudioutils_la_CFLAGS = $(AM_CFLAGS)
+libaudioutils_la_LDFLAGS = -shared
+
+#compile tinysndfile
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA += tinysndfile.pc
 EXTRA_DIST = $(pkgconfig_DATA)
 
 AM_CFLAGS += -I $(WORKSPACE)/system/media/audio_utils
 AM_CFLAGS += -I $(WORKSPACE)/system/media/audio_utils/include
 
-library_includedir = $(includedir)/tinysndfile
-library_include_HEADERS = include/audio_utils/sndfile.h
+librarytinysnd_includedir = $(includedir)/tinysndfile
+librarytinysnd_include_HEADERS = include/audio_utils/sndfile.h
 
-c_sources = tinysndfile.c \
+tinysnd_sources = tinysndfile.c \
             primitives.c
 
-lib_LTLIBRARIES = libtinysndfile.la
-libtinysndfile_la_SOURCES = $(c_sources)
+lib_LTLIBRARIES += libtinysndfile.la
+libtinysndfile_la_SOURCES = $(tinysnd_sources)
 libtinysndfile_la_CFLAGS = $(AM_CFLAGS)
