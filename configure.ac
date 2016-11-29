@@ -70,6 +70,7 @@ AC_CONFIG_FILES([ \
         audio_utils/Makefile \
         audio/include/Makefile \
         audio_utils/tinysndfile.pc \
+        audio_utils/audio_utils.pc \
         audio_route/audio_route.pc
         ])
 AC_OUTPUT
