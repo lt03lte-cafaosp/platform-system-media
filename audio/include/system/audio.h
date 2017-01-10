@@ -331,6 +331,7 @@ typedef enum {
     AUDIO_FORMAT_SBC                 = 0x20000000UL,
     AUDIO_FORMAT_APTX                = 0x21000000UL,
     AUDIO_FORMAT_APTX_HD             = 0x22000000UL,
+    AUDIO_FORMAT_AAC_LATM            = 0x23000000UL,
 
     AUDIO_FORMAT_DOLBY_TRUEHD        = 0x0E000000UL,
     AUDIO_FORMAT_MAIN_MASK           = 0xFF000000UL,
@@ -391,6 +392,12 @@ typedef enum {
                                         AUDIO_FORMAT_AAC_SUB_HE_V2),
     AUDIO_FORMAT_AAC_ADTS_ELD        = (AUDIO_FORMAT_AAC_ADTS |
                                         AUDIO_FORMAT_AAC_SUB_ELD),
+    AUDIO_FORMAT_AAC_LATM_LC         = (AUDIO_FORMAT_AAC_LATM |\
+                                        AUDIO_FORMAT_AAC_SUB_LC),
+    AUDIO_FORMAT_AAC_LATM_HE_V1      = (AUDIO_FORMAT_AAC_LATM |\
+                                        AUDIO_FORMAT_AAC_SUB_HE_V1),
+    AUDIO_FORMAT_AAC_LATM_HE_V2      = (AUDIO_FORMAT_AAC_LATM |\
+                                        AUDIO_FORMAT_AAC_SUB_HE_V2),
     /*Offload PCM formats*/
     AUDIO_FORMAT_PCM_16_BIT_OFFLOAD  = (AUDIO_FORMAT_PCM_OFFLOAD |
                                         AUDIO_FORMAT_PCM_SUB_16_BIT),
@@ -1554,6 +1561,7 @@ static inline bool audio_is_valid_format(audio_format_t format)
     case AUDIO_FORMAT_AMR_WB:
     case AUDIO_FORMAT_AAC:
     case AUDIO_FORMAT_AAC_ADTS:
+    case AUDIO_FORMAT_AAC_LATM:
     case AUDIO_FORMAT_HE_AAC_V1:
     case AUDIO_FORMAT_HE_AAC_V2:
     case AUDIO_FORMAT_VORBIS:
