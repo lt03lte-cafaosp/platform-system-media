@@ -28,6 +28,19 @@
 
 __BEGIN_DECLS
 
+/* The macro FCC_2 highlights places where there are 2-channel assumptions.
+ * This is typically due to legacy implementation of stereo input or output.
+ * Search also for "2", "left", "right", "[0]", "[1]", ">> 16", "<< 16", etc.
+ * Do not change this value.
+ */
+#define FCC_2 2     // FCC_2 = Fixed Channel Count 2
+
+/* The macro FCC_8 highlights places where there are 8-channel assumptions.
+ * This is typically due to audio mixer and resampler limitations.
+ * Do not change this value without verifying all locations that use it.
+ */
+#define FCC_8 8     // FCC_8 = Fixed Channel Count 8
+
 /* The enums were moved here mostly from
  * frameworks/base/include/media/AudioSystem.h
  */
@@ -64,6 +77,8 @@ typedef enum {
     AUDIO_STREAM_REROUTING        = 11, /* For dynamic policy output mixes */
     AUDIO_STREAM_PATCH            = 12, /* For internal audio flinger tracks. Fixed volume */
     AUDIO_STREAM_PUBLIC_CNT       = AUDIO_STREAM_TTS + 1,
+    AUDIO_STREAM_FOR_POLICY_CNT   = AUDIO_STREAM_PATCH, /* number of streams considered by
+                                           audio policy for volume and routing */
     AUDIO_STREAM_CNT              = AUDIO_STREAM_PATCH + 1,
 } audio_stream_type_t;
 
@@ -120,6 +135,7 @@ enum {
     AUDIO_FLAG_HW_HOTWORD                 = 0x20,
     AUDIO_FLAG_BYPASS_INTERRUPTION_POLICY = 0x40,
     AUDIO_FLAG_BYPASS_MUTE                = 0x80,
+    AUDIO_FLAG_LOW_LATENCY                = 0x100,
 };
 
 /* Do not change these values without updating their counterparts
@@ -184,10 +200,39 @@ typedef enum {
      * after all uses have been updated from 0 to the appropriate symbol, and have been tested.
      */
     AUDIO_SESSION_ALLOCATE = 0,
+
+    /* For use with AudioRecord::start(), this indicates no trigger session.
+     * It is also used with output tracks and patch tracks, which never have a session.
+     */
+    AUDIO_SESSION_NONE = 0,
 } audio_session_t;
 
-/* a unique ID allocated by AudioFlinger for use as a audio_io_handle_t or audio_session_t */
+/* a unique ID allocated by AudioFlinger for use as an audio_io_handle_t, audio_session_t,
+ * effect ID (int), audio_module_handle_t, and audio_patch_handle_t.
+ * Audio port IDs (audio_port_handle_t) are allocated by AudioPolicy
+ * in a different namespace than AudioFlinger unique IDs.
+ */
 typedef int audio_unique_id_t;
+
+/* Possible uses for an audio_unique_id_t */
+typedef enum {
+    AUDIO_UNIQUE_ID_USE_UNSPECIFIED = 0,
+    AUDIO_UNIQUE_ID_USE_SESSION = 1,    // for allocated sessions, not special AUDIO_SESSION_*
+    AUDIO_UNIQUE_ID_USE_MODULE = 2,
+    AUDIO_UNIQUE_ID_USE_EFFECT = 3,
+    AUDIO_UNIQUE_ID_USE_PATCH = 4,
+    AUDIO_UNIQUE_ID_USE_OUTPUT = 5,
+    AUDIO_UNIQUE_ID_USE_INPUT = 6,
+    // 7 is available
+    AUDIO_UNIQUE_ID_USE_MAX = 8,  // must be a power-of-two
+    AUDIO_UNIQUE_ID_USE_MASK = AUDIO_UNIQUE_ID_USE_MAX - 1
+} audio_unique_id_use_t;
+
+/* Return the use of an audio_unique_id_t */
+static inline audio_unique_id_use_t audio_unique_id_get_use(audio_unique_id_t id)
+{
+    return (audio_unique_id_use_t) (id & AUDIO_UNIQUE_ID_USE_MASK);
+}
 
 #define AUDIO_UNIQUE_ID_ALLOCATE AUDIO_SESSION_ALLOCATE
 
@@ -265,6 +310,8 @@ typedef enum {
     AUDIO_FORMAT_E_AC3               = 0x0A000000UL,
     AUDIO_FORMAT_DTS                 = 0x0B000000UL,
     AUDIO_FORMAT_DTS_HD              = 0x0C000000UL,
+    // IEC61937 is encoded audio wrapped in 16-bit PCM.
+    AUDIO_FORMAT_IEC61937            = 0x0D000000UL,
     AUDIO_FORMAT_EVRC                = 0x10000000UL,
     AUDIO_FORMAT_QCELP               = 0x11000000UL,
     AUDIO_FORMAT_WMA                 = 0x12000000UL,
@@ -283,6 +330,10 @@ typedef enum {
     AUDIO_FORMAT_DSD                 = 0x1F000000UL,
     AUDIO_FORMAT_SBC                 = 0x20000000UL,
     AUDIO_FORMAT_APTX                = 0x21000000UL,
+    AUDIO_FORMAT_APTX_HD             = 0x22000000UL,
+    AUDIO_FORMAT_AAC_LATM            = 0x23000000UL,
+
+    AUDIO_FORMAT_DOLBY_TRUEHD        = 0x0E000000UL,
     AUDIO_FORMAT_MAIN_MASK           = 0xFF000000UL,
     AUDIO_FORMAT_SUB_MASK            = 0x00FFFFFFUL,
 
@@ -341,6 +392,12 @@ typedef enum {
                                         AUDIO_FORMAT_AAC_SUB_HE_V2),
     AUDIO_FORMAT_AAC_ADTS_ELD        = (AUDIO_FORMAT_AAC_ADTS |
                                         AUDIO_FORMAT_AAC_SUB_ELD),
+    AUDIO_FORMAT_AAC_LATM_LC         = (AUDIO_FORMAT_AAC_LATM |\
+                                        AUDIO_FORMAT_AAC_SUB_LC),
+    AUDIO_FORMAT_AAC_LATM_HE_V1      = (AUDIO_FORMAT_AAC_LATM |\
+                                        AUDIO_FORMAT_AAC_SUB_HE_V1),
+    AUDIO_FORMAT_AAC_LATM_HE_V2      = (AUDIO_FORMAT_AAC_LATM |\
+                                        AUDIO_FORMAT_AAC_SUB_HE_V2),
     /*Offload PCM formats*/
     AUDIO_FORMAT_PCM_16_BIT_OFFLOAD  = (AUDIO_FORMAT_PCM_OFFLOAD |
                                         AUDIO_FORMAT_PCM_SUB_16_BIT),
@@ -687,7 +744,9 @@ enum {
     /* limited-output speaker device for acoustic safety */
     AUDIO_DEVICE_OUT_SPEAKER_SAFE              = 0x400000,
     AUDIO_DEVICE_OUT_IP                        = 0x800000,
-    AUDIO_DEVICE_OUT_PROXY                     = 0x1000000,
+    /* audio bus implemented by the audio system (e.g an MOST stereo channel) */
+    AUDIO_DEVICE_OUT_BUS                       = 0x1000000,
+    AUDIO_DEVICE_OUT_PROXY                     = 0x2000000,
     AUDIO_DEVICE_OUT_DEFAULT                   = AUDIO_DEVICE_BIT_DEFAULT,
     AUDIO_DEVICE_OUT_ALL      = (AUDIO_DEVICE_OUT_EARPIECE |
                                  AUDIO_DEVICE_OUT_SPEAKER |
@@ -713,6 +772,7 @@ enum {
                                  AUDIO_DEVICE_OUT_AUX_LINE |
                                  AUDIO_DEVICE_OUT_SPEAKER_SAFE |
                                  AUDIO_DEVICE_OUT_IP |
+                                 AUDIO_DEVICE_OUT_BUS |
                                  AUDIO_DEVICE_OUT_PROXY |
                                  AUDIO_DEVICE_OUT_DEFAULT),
     AUDIO_DEVICE_OUT_ALL_A2DP = (AUDIO_DEVICE_OUT_BLUETOOTH_A2DP |
@@ -751,7 +811,9 @@ enum {
     AUDIO_DEVICE_IN_BLUETOOTH_A2DP        = AUDIO_DEVICE_BIT_IN | 0x20000,
     AUDIO_DEVICE_IN_LOOPBACK              = AUDIO_DEVICE_BIT_IN | 0x40000,
     AUDIO_DEVICE_IN_IP                    = AUDIO_DEVICE_BIT_IN | 0x80000,
-    AUDIO_DEVICE_IN_PROXY                 = AUDIO_DEVICE_BIT_IN | 0x1000000,
+    /* audio bus implemented by the audio system (e.g an MOST stereo channel) */
+    AUDIO_DEVICE_IN_BUS                   = AUDIO_DEVICE_BIT_IN | 0x100000,
+    AUDIO_DEVICE_IN_PROXY                 = AUDIO_DEVICE_BIT_IN | 0x2000000,
     AUDIO_DEVICE_IN_DEFAULT               = AUDIO_DEVICE_BIT_IN | AUDIO_DEVICE_BIT_DEFAULT,
 
     AUDIO_DEVICE_IN_ALL     = (AUDIO_DEVICE_IN_COMMUNICATION |
@@ -775,6 +837,7 @@ enum {
                                AUDIO_DEVICE_IN_LOOPBACK |
                                AUDIO_DEVICE_IN_PROXY |
                                AUDIO_DEVICE_IN_IP |
+                               AUDIO_DEVICE_IN_BUS |
                                AUDIO_DEVICE_IN_DEFAULT),
     AUDIO_DEVICE_IN_ALL_SCO = AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET,
     AUDIO_DEVICE_IN_ALL_USB  = (AUDIO_DEVICE_IN_USB_ACCESSORY |
@@ -833,7 +896,6 @@ typedef enum {
     AUDIO_INPUT_FLAG_HW_HOTWORD = 0x2,  // prefer an input that captures from hw hotword source
     AUDIO_INPUT_FLAG_RAW        = 0x4,  // minimize signal processing
     AUDIO_INPUT_FLAG_SYNC       = 0x8,  // synchronize I/O streams
-    AUDIO_INPUT_FLAG_TIMESTAMP  = 0x10, // timestamp metadata mode
 
 } audio_input_flags_t;
 
@@ -857,6 +919,45 @@ typedef struct {
     uint32_t offload_buffer_size;       // offload fragment size
     audio_usage_t usage;
 } audio_offload_info_t;
+
+/* Information about BT SBC encoder configuration
+ * This data is used between audio HAL module and
+ * BT IPC library to configure DSP encoder
+ */
+typedef struct {
+    uint32_t subband;    /* 4, 8 */
+    uint32_t blk_len;    /* 4, 8, 12, 16 */
+    uint16_t sampling_rate; /*44.1khz,48khz*/
+    uint8_t  channels;      /*0(Mono),1(Dual_mono),2(Stereo),3(JS)*/
+    uint8_t  alloc;         /*0(Loudness),1(SNR)*/
+    uint8_t  min_bitpool;   /* 2 */
+    uint8_t  max_bitpool;   /*53(44.1khz),51 (48khz) */
+    uint32_t bitrate;      /* 320kbps to 512kbps */
+} audio_sbc_encoder_config;
+
+
+/* Information about BT APTX encoder configuration
+ * This data is used between audio HAL module and
+ * BT IPC library to configure DSP encoder
+ */
+typedef struct {
+    uint16_t sampling_rate;
+    uint8_t  channels;
+    uint32_t bitrate;
+} audio_aptx_encoder_config;
+
+
+/* Information about BT AAC encoder configuration
+ * This data is used between audio HAL module and
+ * BT IPC library to configure DSP encoder
+ */
+typedef struct {
+    uint32_t enc_mode; /* LC, SBR, PS */
+    uint16_t format_flag; /* RAW, ADTS */
+    uint16_t channels; /* 1-Mono, 2-Stereo */
+    uint32_t sampling_rate;
+    uint32_t bitrate;
+} audio_aac_encoder_config;
 
 #define AUDIO_MAKE_OFFLOAD_INFO_VERSION(maj,min) \
             ((((maj) & 0xff) << 8) | ((min) & 0xff))
@@ -912,9 +1013,24 @@ static const audio_config_t AUDIO_CONFIG_INITIALIZER = {
     frame_count: 0,
 };
 
+struct audio_config_base {
+    uint32_t sample_rate;
+    audio_channel_mask_t channel_mask;
+    audio_format_t  format;
+};
+
+typedef struct audio_config_base audio_config_base_t;
+
+static const audio_config_base_t AUDIO_CONFIG_BASE_INITIALIZER = {
+    sample_rate: 0,
+    channel_mask: AUDIO_CHANNEL_NONE,
+    format: AUDIO_FORMAT_DEFAULT
+};
 
 /* audio hw module handle functions or structures referencing a module */
-typedef int audio_module_handle_t;
+typedef enum {
+    AUDIO_MODULE_HANDLE_NONE = 0,
+} audio_module_handle_t;
 
 /******************************
  *  Volume control
@@ -1121,8 +1237,9 @@ struct audio_port {
  * But the same patch receives another system wide unique handle allocated by the framework.
  * This unique handle is used for all transactions inside the framework.
  */
-typedef int audio_patch_handle_t;
-#define AUDIO_PATCH_HANDLE_NONE 0
+typedef enum {
+    AUDIO_PATCH_HANDLE_NONE = 0,
+} audio_patch_handle_t;
 
 #define AUDIO_PATCH_PORTS_MAX   16
 
@@ -1444,6 +1561,7 @@ static inline bool audio_is_valid_format(audio_format_t format)
     case AUDIO_FORMAT_AMR_WB:
     case AUDIO_FORMAT_AAC:
     case AUDIO_FORMAT_AAC_ADTS:
+    case AUDIO_FORMAT_AAC_LATM:
     case AUDIO_FORMAT_HE_AAC_V1:
     case AUDIO_FORMAT_HE_AAC_V2:
     case AUDIO_FORMAT_VORBIS:
@@ -1452,6 +1570,7 @@ static inline bool audio_is_valid_format(audio_format_t format)
     case AUDIO_FORMAT_E_AC3:
     case AUDIO_FORMAT_DTS:
     case AUDIO_FORMAT_DTS_HD:
+    case AUDIO_FORMAT_IEC61937:
     case AUDIO_FORMAT_QCELP:
     case AUDIO_FORMAT_EVRC:
     case AUDIO_FORMAT_EVRCB:
@@ -1466,21 +1585,51 @@ static inline bool audio_is_valid_format(audio_format_t format)
     case AUDIO_FORMAT_WMA:
     case AUDIO_FORMAT_WMA_PRO:
     case AUDIO_FORMAT_APTX:
+    case AUDIO_FORMAT_DSD:
         return true;
     case AUDIO_FORMAT_PCM_OFFLOAD:
         if (format != AUDIO_FORMAT_PCM_16_BIT_OFFLOAD &&
                 format != AUDIO_FORMAT_PCM_24_BIT_OFFLOAD) {
             return false;
         }
+    case AUDIO_FORMAT_DOLBY_TRUEHD:
         return true;
     default:
         return false;
     }
 }
 
+/**
+ * Extract the primary format, eg. PCM, AC3, etc.
+ */
+static inline audio_format_t audio_get_main_format(audio_format_t format)
+{
+    return (audio_format_t)(format & AUDIO_FORMAT_MAIN_MASK);
+}
+
+/**
+ * Is the data plain PCM samples that can be scaled and mixed?
+ */
 static inline bool audio_is_linear_pcm(audio_format_t format)
 {
-    return ((format & AUDIO_FORMAT_MAIN_MASK) == AUDIO_FORMAT_PCM);
+    return (audio_get_main_format(format) == AUDIO_FORMAT_PCM);
+}
+
+/**
+ * For this format, is the number of PCM audio frames directly proportional
+ * to the number of data bytes?
+ *
+ * In other words, is the format transported as PCM audio samples,
+ * but not necessarily scalable or mixable.
+ * This returns true for real PCM, but also for AUDIO_FORMAT_IEC61937,
+ * which is transported as 16 bit PCM audio, but where the encoded data
+ * cannot be mixed or scaled.
+ */
+static inline bool audio_has_proportional_frames(audio_format_t format)
+{
+    audio_format_t mainFormat = audio_get_main_format(format);
+    return (mainFormat == AUDIO_FORMAT_PCM
+            || mainFormat == AUDIO_FORMAT_IEC61937);
 }
 
 static inline size_t audio_bytes_per_sample(audio_format_t format)
@@ -1497,6 +1646,7 @@ static inline size_t audio_bytes_per_sample(audio_format_t format)
         size = sizeof(uint8_t) * 3;
         break;
     case AUDIO_FORMAT_PCM_16_BIT:
+    case AUDIO_FORMAT_IEC61937:
     case AUDIO_FORMAT_PCM_16_BIT_OFFLOAD:
         size = sizeof(int16_t);
         break;
@@ -1534,14 +1684,16 @@ static inline bool audio_device_is_digital(audio_devices_t device) {
         return (~AUDIO_DEVICE_BIT_IN & device & (AUDIO_DEVICE_IN_ALL_USB |
                           AUDIO_DEVICE_IN_HDMI |
                           AUDIO_DEVICE_IN_SPDIF |
-                          AUDIO_DEVICE_IN_IP)) != 0;
+                          AUDIO_DEVICE_IN_IP |
+                          AUDIO_DEVICE_IN_BUS)) != 0;
     } else {
         // output
         return (device & (AUDIO_DEVICE_OUT_ALL_USB |
                           AUDIO_DEVICE_OUT_HDMI |
                           AUDIO_DEVICE_OUT_HDMI_ARC |
                           AUDIO_DEVICE_OUT_SPDIF |
-                          AUDIO_DEVICE_OUT_IP)) != 0;
+                          AUDIO_DEVICE_OUT_IP |
+                          AUDIO_DEVICE_OUT_BUS)) != 0;
     }
 }
 
