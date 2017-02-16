@@ -3,8 +3,6 @@ pkgconfig_DATA = audio_route.pc
 
 AM_CFLAGS = -Werror -Wall
 
-AM_CFLAGS += -I ${WORKSPACE}/external/tinyalsa/include
-
 library_includedir = $(includedir)/audio_route
 library_include_HEADERS = include/audio_route/audio_route.h
 
