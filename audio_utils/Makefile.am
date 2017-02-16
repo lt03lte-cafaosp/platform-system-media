@@ -11,6 +11,7 @@ AM_CFLAGS += -I $(top_srcdir)/audio_utils/include
 audioutils_includedir = $(includedir)/audio_utils
 audioutils_include_HEADERS  = include/audio_utils/primitives.h
 audioutils_include_HEADERS += include/audio_utils/format.h
+audioutils_include_HEADERS += include/audio_utils/channels.h
 
 audioutils_sources = format.c \
             channels.c \
