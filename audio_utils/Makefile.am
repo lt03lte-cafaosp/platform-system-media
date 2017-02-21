@@ -1,16 +1,16 @@
-#compile audio utils
+##### audioutils #####
 AM_CFLAGS = -Werror -Wall
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = audio_utils.pc
 EXTRA_DIST = $(pkgconfig_DATA)
 
-AM_CFLAGS += -I $(WORKSPACE)/system/media/audio/include
-AM_CFLAGS += -I $(WORKSPACE)/system/media/audio_utils/include
+AM_CFLAGS += -I $(top_srcdir)/audio/include
+AM_CFLAGS += -I $(top_srcdir)/audio_utils/include
 
-libraryaudioutils_includedir = $(includedir)/audio/audio_utils
-libraryaudioutils_include_HEADERS = include/audio_utils/primitives.h
-libraryaudioutils_include_HEADERS += include/audio_utils/format.h
+audioutils_includedir = $(includedir)/audio_utils
+audioutils_include_HEADERS  = include/audio_utils/primitives.h
+audioutils_include_HEADERS += include/audio_utils/format.h
 
 audioutils_sources = format.c \
             channels.c \
@@ -21,17 +21,17 @@ libaudioutils_la_SOURCES = $(audioutils_sources)
 libaudioutils_la_CFLAGS = $(AM_CFLAGS)
 libaudioutils_la_LDFLAGS = -shared
 
-#compile tinysndfile
+##### tinysndfile #####
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA += tinysndfile.pc
 EXTRA_DIST = $(pkgconfig_DATA)
 
-AM_CFLAGS += -I $(WORKSPACE)/system/media/audio_utils
-AM_CFLAGS += -I $(WORKSPACE)/system/media/audio_utils/include
+AM_CFLAGS += -I $(top_srcdir)/audio_utils
+AM_CFLAGS += -I $(top_srcdir)/audio_utils/include
 
-librarytinysnd_includedir = $(includedir)/tinysndfile
-librarytinysnd_include_HEADERS = include/audio_utils/sndfile.h
+tinysnd_includedir = $(includedir)/tinysndfile
+tinysnd_include_HEADERS = include/audio_utils/sndfile.h
 
 tinysnd_sources = tinysndfile.c \
             primitives.c

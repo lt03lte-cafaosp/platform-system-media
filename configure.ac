@@ -67,10 +67,11 @@ AC_CONFIG_FILES([ \
         Makefile \
         camera/src/Makefile \
         audio_route/Makefile \
+        audio_route/audio_route.pc \
         audio_utils/Makefile \
-        audio/include/Makefile \
-        audio_utils/tinysndfile.pc \
         audio_utils/audio_utils.pc \
-        audio_route/audio_route.pc
+        audio_utils/tinysndfile.pc \
+        audio/include/Makefile \
+        audio_effects/include/Makefile
         ])
 AC_OUTPUT
