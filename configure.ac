@@ -73,5 +73,7 @@ AC_CONFIG_FILES([ \
         audio_utils/tinysndfile.pc \
         audio/include/Makefile \
         audio_effects/include/Makefile
+        alsa_utils/Makefile \
+        alsa_utils/alsa_utils.pc
         ])
 AC_OUTPUT
