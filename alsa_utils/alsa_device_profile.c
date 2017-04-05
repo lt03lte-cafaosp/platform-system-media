@@ -38,10 +38,14 @@
 
 static const char * const format_string_map[] = {
     "AUDIO_FORMAT_PCM_16_BIT",      /* "PCM_FORMAT_S16_LE", */
-    "AUDIO_FORMAT_PCM_32_BIT",      /* "PCM_FORMAT_S32_LE", */
     "AUDIO_FORMAT_PCM_8_BIT",       /* "PCM_FORMAT_S8", */
+    "AUDIO_FORMAT_PCM_16_BIT",      /* "PCM_FORMAT_S16_BE", */
     "AUDIO_FORMAT_PCM_8_24_BIT",    /* "PCM_FORMAT_S24_LE", */
-    "AUDIO_FORMAT_PCM_24_BIT_PACKED"/* "PCM_FORMAT_S24_3LE" */
+    "AUDIO_FORMAT_PCM_8_24_BIT",    /* "PCM_FORMAT_S24_BE", */
+    "AUDIO_FORMAT_PCM_24_BIT_PACKED",  /* "PCM_FORMAT_S24_3LE" */
+    "AUDIO_FORMAT_PCM_24_BIT_PACKED",  /* "PCM_FORMAT_S24_3BE" */
+    "AUDIO_FORMAT_PCM_32_BIT",  /* "PCM_FORMAT_S32_LE" */
+    "AUDIO_FORMAT_PCM_32_BIT"  /* "PCM_FORMAT_S32_BE" */
 };
 
 extern int8_t const pcm_format_value_map[50];
@@ -436,6 +440,7 @@ char * profile_get_format_strs(alsa_device_profile* profile)
 
     size_t numEntries = 0;
     size_t index = 0;
+
     for (index = 0; profile->formats[index] != PCM_FORMAT_INVALID; index++) {
         // account for both the null, and potentially the bar.
         if (buffSize - curStrLen < strlen(format_string_map[profile->formats[index]])
