@@ -355,7 +355,10 @@ bool profile_read_device_info(alsa_device_profile* profile)
     }
 
     /* let's get some defaults */
-    read_alsa_device_config(profile, &profile->default_config);
+    if (read_alsa_device_config(profile, &profile->default_config) < 0) {
+        ALOGE("%s: read_alsa_device_config failed:\n", __func__);
+        return false;
+    }
     ALOGV("default_config chans:%d rate:%d format:%d count:%d size:%d",
           profile->default_config.channels, profile->default_config.rate,
           profile->default_config.format, profile->default_config.period_count,
